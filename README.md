@@ -7,6 +7,11 @@ BlockRoulette is a decentralized game of Roulette on the Ethereum blockchain uti
 This list is subject to revision in the future and may possibly be expanded to include
 1. High/Low
 
+## Next Steps
+1. Create RouletteContract contract
+2. Wireframe nessecary functions
+3. Decide on randomness implementation
+
 ## Deviations from typical Roulette conventions
 While we follow typical Roulette conventions wherever possible, we do make a couple notable deviations.
 
