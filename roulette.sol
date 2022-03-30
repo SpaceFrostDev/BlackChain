@@ -29,4 +29,13 @@ contract Roulette {
 
     Bet[] public currentBets;    // Publicly viewable array holding all current player bets
 
+
+/*
+@dev TODO constructor
+@dev TODO placeBet()
+@dev TODO generateRandomNum()
+
+Payout schedule, running pot, multiple bets can be adjusted in version 1
+V0.1 simply takes one bet and doubles the players money no matter what their betting strategy
+*/
 }
