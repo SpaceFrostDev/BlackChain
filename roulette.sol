@@ -32,13 +32,20 @@ contract Roulette {
 
     constructor() public {
     }
-    function placeBet(unint8 betCode, uint8 subCode) payable public {
-        require(msg.value == amount && msg.value >= 0); 
-        require(betCode >= 0 && betCode <= 3); 
-        require(subCode >= 0 && subCode <= 3);   
-        require(number >= 0 && number <=38);
-        require(houseBalance>= bet.amount.mul(2));
-        currentBets.push(Bet({amount:msg.value, etc.}))
+    function placeBet(uint8 betCode, uint8 subCode) payable public {
+        require(msg.value > 0); 
+        require(betCode >= 0 && betCode <= 3);
+        if (betCode == 0) {
+            require(subCode >= 1 && subCode <= 35);
+        }
+        else {
+            require(subCode == 0 || subCode == 1);
+        }
+        if (houseBalance <= msg.value.mul(2)) {
+            houseBalance.add(msg.value.mul(2));
+        }
+        currentBets.push(Bet({amount: msg.value, player: msg.sender, 
+                                betCode: betCode, subCode: subCode}));
     }
     /*
         A bet is valid when:
@@ -57,6 +64,7 @@ contract Roulette {
         
     }
 */
+/*
     function spinWheel() public {
         // Pseudo-random number generation, highly imperfect but functional
         uint difficulty = block.difficulty;
@@ -108,7 +116,7 @@ contract Roulette {
         // @dev Delete bets
         currentBets.length = 0;
     }
-
+*/
 /*
 @dev v1.0 TODO
 - payout function improvement
