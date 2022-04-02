@@ -23,7 +23,7 @@ contract Roulette {
 
     struct Bet{
         uint256 amount;    // Amount of bet in wei
-        address player;
+        address payable player;
         uint8 betCode;     // See betting strategy codes table
         uint8 subCode;     // See subcodes
     }
@@ -62,9 +62,8 @@ contract Roulette {
         require(number >= 0 && number <=38);
         require(houseBalance>= bet.amount.mul(2))
         
-    }
-*/
-/*
+    } */
+
     function spinWheel() public {
         // Pseudo-random number generation, highly imperfect but functional
         uint difficulty = block.difficulty;
@@ -116,9 +115,4 @@ contract Roulette {
         // @dev Delete bets
         currentBets.length = 0;
     }
-*/
-/*
-@dev v1.0 TODO
-- payout function improvement
-*/
 }
