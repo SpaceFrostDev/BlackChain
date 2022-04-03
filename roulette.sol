@@ -20,6 +20,7 @@ contract Roulette {
     uint8[] red = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
     uint8[] black = [2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35];
     uint256 houseBalance = 100_000_000_000_000_000;
+    uint256 allBetTotal = 0;
 
     struct Bet{
         uint256 amount;    // Amount of bet in wei
@@ -32,6 +33,7 @@ contract Roulette {
 
     constructor() public {
     }
+
     function placeBet(uint8 betCode, uint8 subCode) payable public {
         require(msg.value > 0); 
         require(betCode >= 0 && betCode <= 3);
@@ -46,6 +48,8 @@ contract Roulette {
         }
         currentBets.push(Bet({amount: msg.value, player: msg.sender, 
                                 betCode: betCode, subCode: subCode}));
+        
+        allBetTotal.add(msg.value);
     }
     /*
         A bet is valid when:
@@ -63,6 +67,10 @@ contract Roulette {
         require(houseBalance>= bet.amount.mul(2))
         
     } */
+
+    function getCurrentBets() public view returns(uint256 betTotal, uint numBets) {
+        return (allBetTotal, currentBets.length);
+    }
 
     function spinWheel() public {
         // Pseudo-random number generation, highly imperfect but functional
@@ -114,5 +122,6 @@ contract Roulette {
 
         // @dev Delete bets
         currentBets.length = 0;
+        allBetTotal = 0;
     }
 }
