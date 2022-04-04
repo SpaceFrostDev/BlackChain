@@ -73,21 +73,20 @@ contract Roulette {
     }
 
     function spinWheel() public {
-        // Pseudo-random number generation, highly imperfect but functional
-        uint difficulty = block.difficulty;
-        bytes32 blockHash = blockhash(block.number-1);
+        // Pseudo-random number generation, imperfect but functional
+        uint difficulty = block.difficulty; 
         Bet memory lastBet = currentBets[currentBets.length-1];
-        uint randNum = uint(keccak256(abi.encodePacked(now, difficulty, blockHash, 
+        uint randNum = uint(keccak256(abi.encodePacked(now, difficulty, 
             lastBet.betCode, lastBet.player, lastBet.subCode))) % 38;    // American Roulette
 
         for (uint i = 0; i < currentBets.length; i++) {
             bool isWin = false;
             Bet memory bet = currentBets[i];
 
-            // Switch statement from C++ would be ideal
             if (randNum != 0 && randNum != 37) {    // Player loses regardless of bet strat
                 if (bet.betCode == 0) {
-                    isWin = (randNum == bet.subCode); }
+                    isWin = (randNum == bet.subCode);
+                }
                 if (bet.betCode == 1) {
                     isWin = (bet.subCode == (randNum % 2)); }
                 if (bet.betCode == 2) {
@@ -123,5 +122,6 @@ contract Roulette {
         // @dev Delete bets
         currentBets.length = 0;
         allBetTotal = 0;
+        
     }
 }
