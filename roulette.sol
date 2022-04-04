@@ -52,20 +52,18 @@ contract Roulette {
         allBetTotal.add(msg.value);
     }
     /*
+        Payout structure:
+        0 - 36x
+        1 - 2x
+        2 - 2x
+        3 - 2x
+
         A bet is valid when:
         1 - the value of the bet is correct (=Amount)
         2 - betCode is known (between 0 and 3)
         3 - subCode is known (between 0 and 3)
         4 - the option betted is valid
-        5 - the bank has enough funds to pay the maximum potential winnings
-        
-     function isvalidbet(uint number, uint8 betCode, uint8 subCode) payable public {
-        require(msg.value == amount); 
-        require(betCode >= 0 && betCode <= 3); 
-        require(subCode >= 0 && subCode <= 3);   
-        require(number >= 0 && number <=38);
-        require(houseBalance>= bet.amount.mul(2))
-        
+        5 - the bank has enough funds to pay the maximum potential winnings  
     } */
 
     function getCurrentBets() public view returns(uint256 betTotal, uint numBets) {
@@ -86,9 +84,12 @@ contract Roulette {
             if (randNum != 0 && randNum != 37) {    // Player loses regardless of bet strat
                 if (bet.betCode == 0) {
                     isWin = (randNum == bet.subCode);
+                    if (isWin) { bet.amount = bet.amount.mul(35); }
                 }
                 if (bet.betCode == 1) {
-                    isWin = (bet.subCode == (randNum % 2)); }
+                    isWin = (bet.subCode == (randNum % 2));
+                    if (isWin) { bet.amount = bet.amount.mul(35); }
+                }
                 if (bet.betCode == 2) {
                     if (bet.subCode == 0) {    // bet on black
                         if (randNum <= 10 || (randNum>= 20 && randNum <= 28)) {
@@ -99,24 +100,21 @@ contract Roulette {
                     else {    // bet on red
                         if ((randNum >= 12 && randNum <= 18) || randNum >= 30) {
                             isWin = (randNum % 2 == 0); }
-                        else {
-                            isWin = (randNum % 2 == 1); }
+                        else { isWin = (randNum % 2 == 1); }
                     }
+
+                    if (isWin) { bet.amount = bet.amount.mul(2); }
                 }
                 if (bet.betCode == 3) {    // bet high/low
-                    if (bet.subCode == 0) {
-                        isWin = (randNum < 16); }
-                    else {
-                        isWin = (randNum >= 16); }
+                    if (bet.subCode == 0) { isWin = (randNum < 16); }
+                    else { isWin = (randNum >= 16); }
+
+                    if (isWin) { bet.amount = bet.amount.mul(35); }
                 }
             }
 
-            if (isWin) {
-                bet.amount = bet.amount.mul(2);    // @dev Payout function
-                bet.player.transfer(bet.amount);
-            }
-            else {
-                houseBalance.add(bet.amount); }
+            if (isWin) { bet.player.transfer(bet.amount); }
+            else { houseBalance.add(bet.amount); }
         }
 
         // @dev Delete bets
