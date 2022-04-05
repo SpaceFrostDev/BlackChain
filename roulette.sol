@@ -13,10 +13,8 @@ pragma solidity ^0.5.0;
     3. 0 is Low, 1 is High
 */
 
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v2.3.0/contracts/math/SafeMath.sol";
 
 contract Roulette {
-    using SafeMath for uint256;
     uint8[] red = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
     uint8[] black = [2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35];
     uint256 houseBalance = 100_000_000_000_000_000;
@@ -34,22 +32,27 @@ contract Roulette {
     constructor() public {
     }
 
-    function placeBet(uint8 betCode, uint8 subCode) payable public {
+    function placeBet(uint8 betCode, uint8 subCode) payable public returns(uint) {
         require(msg.value > 0); 
         require(betCode >= 0 && betCode <= 3);
+
         if (betCode == 0) {
             require(subCode >= 1 && subCode <= 35);
         }
         else {
             require(subCode == 0 || subCode == 1);
         }
-        if (houseBalance <= msg.value.mul(2)) {
-            houseBalance.add(msg.value.mul(2));
+        if (houseBalance <= msg.value * 2) {
+            houseBalance += msg.value * 2;
         }
+
+        msg.sender.transfer(msg.value);
         currentBets.push(Bet({amount: msg.value, player: msg.sender, 
                                 betCode: betCode, subCode: subCode}));
-        
-        allBetTotal.add(msg.value);
+
+        allBetTotal += currentBets[currentBets.length - 1].amount;
+
+        return (allBetTotal);
     }
     /*
         Payout structure:
@@ -66,15 +69,11 @@ contract Roulette {
         5 - the bank has enough funds to pay the maximum potential winnings  
     } */
 
-    function getCurrentBets() public returns(uint256 betTotal, uint numBets) {
-        allBetTotal = 0;
-        for (uint8 i = 0; i < currentBets.length; i++) {
-            allBetTotal.add(currentBets[i].amount);
-        }
+    function getCurrentBets() public view returns(uint256 betTotal, uint numBets) {
         return (allBetTotal, currentBets.length);
     }
 
-    function spinWheel() public returns(uint256 winnings) {
+    function spinWheel() public returns(uint256 winnings, uint) {
         // Pseudo-random number generation, imperfect but functional
         uint difficulty = block.difficulty; 
         Bet memory lastBet = currentBets[currentBets.length-1];
@@ -88,11 +87,11 @@ contract Roulette {
             if (randNum != 0 && randNum != 37) {    // Player loses regardless of bet strat
                 if (bet.betCode == 0) {
                     isWin = (randNum == bet.subCode);
-                    if (isWin) { bet.amount = bet.amount.mul(35); }
+                    if (isWin) { bet.amount = bet.amount * 35; }
                 }
                 if (bet.betCode == 1) {
                     isWin = (bet.subCode == (randNum % 2));
-                    if (isWin) { bet.amount = bet.amount.mul(35); }
+                    if (isWin) { bet.amount = bet.amount * 35; }
                 }
                 if (bet.betCode == 2) {
                     if (bet.subCode == 0) {    // bet on black
@@ -107,28 +106,28 @@ contract Roulette {
                         else { isWin = (randNum % 2 == 1); }
                     }
 
-                    if (isWin) { bet.amount = bet.amount.mul(2); }
+                    if (isWin) { bet.amount = bet.amount * 2; }
                 }
                 if (bet.betCode == 3) {    // bet high/low
                     if (bet.subCode == 0) { isWin = (randNum < 16); }
                     else { isWin = (randNum >= 16); }
 
-                    if (isWin) { bet.amount = bet.amount.mul(35); }
+                    if (isWin) { bet.amount = bet.amount * 35; }
                 }
             }
 
             if (isWin) { 
                 bet.player.transfer(bet.amount);
-                winnings.add(bet.amount);
+                winnings += bet.amount;
             }
-            else { houseBalance.add(bet.amount); }
+            else { houseBalance += bet.amount; }
         }
 
         // @dev Delete bets
         currentBets.length = 0;
         allBetTotal = 0;
 
-        return winnings;
+        return (winnings, randNum);
         
     }
 }
