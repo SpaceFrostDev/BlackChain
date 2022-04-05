@@ -66,11 +66,15 @@ contract Roulette {
         5 - the bank has enough funds to pay the maximum potential winnings  
     } */
 
-    function getCurrentBets() public view returns(uint256 betTotal, uint numBets) {
+    function getCurrentBets() public returns(uint256 betTotal, uint numBets) {
+        allBetTotal = 0;
+        for (uint8 i = 0; i < currentBets.length; i++) {
+            allBetTotal.add(currentBets[i].amount);
+        }
         return (allBetTotal, currentBets.length);
     }
 
-    function spinWheel() public {
+    function spinWheel() public returns(uint256 winnings) {
         // Pseudo-random number generation, imperfect but functional
         uint difficulty = block.difficulty; 
         Bet memory lastBet = currentBets[currentBets.length-1];
@@ -113,13 +117,18 @@ contract Roulette {
                 }
             }
 
-            if (isWin) { bet.player.transfer(bet.amount); }
+            if (isWin) { 
+                bet.player.transfer(bet.amount);
+                winnings.add(bet.amount);
+            }
             else { houseBalance.add(bet.amount); }
         }
 
         // @dev Delete bets
         currentBets.length = 0;
         allBetTotal = 0;
+
+        return winnings;
         
     }
 }
