@@ -66,6 +66,68 @@ contract Roulette {
         5 - the bank has enough funds to pay the maximum potential winnings  
     } */
 
+    function getCurrentBets() public view returns(uint, uint) {
+        uint allBetTotal = 0;
+		for (uint i = 0; i < currentBets.length; i++) {
+			allBetTotal += currentBets[i].allBetTotal;
+        
+        return (allBetTotal, currentBets.length);
+    }
+    
+    function spinWheel() public {
+        // Pseudo-random number generation, imperfect but functional
+        uint difficulty = block.difficulty; 
+        Bet memory lastBet = currentBets[currentBets.length-1];
+        uint randNum = uint(keccak256(abi.encodePacked(now, difficulty, 
+            lastBet.betCode, lastBet.player, lastBet.subCode))) % 38;    // American Roulette
+
+        for (uint i = 0; i < currentBets.length; i++) {
+            bool isWin = false;
+            Bet memory bet = currentBets[i];
+
+            if (randNum != 0 && randNum != 37) {    // Player loses regardless of bet strat
+                if (bet.betCode == 0) {
+                    isWin = (randNum == bet.subCode);
+                    if (isWin) { bet.amount = bet.amount.mul(35); }
+                }
+                if (bet.betCode == 1) {
+                    isWin = (bet.subCode == (randNum % 2));
+                    if (isWin) { bet.amount = bet.amount.mul(35); }
+                }
+                if (bet.betCode == 2) {
+                    if (bet.subCode == 0) {    // bet on black
+                        if (randNum <= 10 || (randNum>= 20 && randNum <= 28)) {
+                            isWin = (randNum % 2 == 0); }   // If in range, must be even
+                        else {
+                            isWin = (randNum % 2 == 1); }   // If not in that range, must be odd
+                    }
+                    else {    // bet on red
+                        if ((randNum >= 12 && randNum <= 18) || randNum >= 30) {
+                            isWin = (randNum % 2 == 0); }
+                        else { isWin = (randNum % 2 == 1); }
+                    }
+
+                    if (isWin) { bet.amount = bet.amount.mul(2); }
+                }
+                if (bet.betCode == 3) {    // bet high/low
+                    if (bet.subCode == 0) { isWin = (randNum < 16); }
+                    else { isWin = (randNum >= 16); }
+
+                    if (isWin) { bet.amount = bet.amount.mul(35); }
+                }
+            }
+
+            if (isWin) { bet.player.transfer(bet.amount); }
+            else { houseBalance.add(bet.amount); }
+        }
+
+        // @dev Delete bets
+        currentBets.length = 0;
+        allBetTotal = 0;
+        
+    }
+}
+
     function getCurrentBets() public view returns(uint256 betTotal, uint numBets) {
         return (allBetTotal, currentBets.length);
     }
